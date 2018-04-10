@@ -395,6 +395,7 @@
 		// Use accounting.noConflict to restore `accounting` back to its original value.
 		// Returns a reference to the library's `accounting` object;
 		// e.g. `var numbers = accounting.noConflict();`
+
 		// lib.noConflict = (function(oldAccounting) {
 		// 	return function() {
 		// 		// Reset the value of the root's `accounting` variable:
@@ -407,8 +408,10 @@
 		// })(root.accounting);
 
 		// Our approach which is similar to underscoreJS.
+		// First we set oldAccounting to whatever the root has accounting set as already.
 		var oldAccounting = root.accounting
-
+		// We then preserve the oldAccounting to the window.accounting and return the library,
+		// which we can set to a variable like `const accountingLibrary = accounting.noConflict();`
 		lib.noConflict = function() {
 			root.accounting = oldAccounting
 			return lib; // lib can also be `this`
