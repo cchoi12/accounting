@@ -411,7 +411,7 @@
 
 		lib.noConflict = function() {
 			root.accounting = oldAccounting
-			return lib; // lib can also be `this`.
+			return lib; // lib can also be `this`
 		}
 
 		// Declare `fx` on the root (global/window) object:
