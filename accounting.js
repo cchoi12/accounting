@@ -28,6 +28,7 @@
 		currency: {
 			symbol : "$",		// default currency symbol is '$'
 			format : "%s%v",	// controls output: %s = symbol, %v = value (can be object, see docs)
+												// 20 USD "%v %s" OR USD 20 "%s %v"
 			decimal : ".",		// decimal point separator
 			thousand : ",",		// thousands separator
 			precision : 2,		// decimal places
@@ -69,7 +70,7 @@
 	 * Tests whether supplied parameter is a true object
 	 */
 	function isObject(obj) {
-		return obj && toString.call(obj) === '[object Object]';
+		return Boolean(obj && toString.call(obj) === '[object Object]');
 	}
 
 	/**
@@ -85,7 +86,9 @@
 		for (key in defs) {
 			if (defs.hasOwnProperty(key)) {
 				// Replace values with defaults only if undefined (allow empty/zero values):
-				if (object[key] == null) object[key] = defs[key];
+				if (object[key] === undefined) {
+					object[key] = defs[key];
+				}
 			}
 		}
 		return object;
@@ -124,24 +127,39 @@
 	/**
 	 * Parses a format string or object and returns format obj for use in rendering
 	 *
-	 * `format` is either a string with the default (positive) format, or object
-	 * containing `pos` (required), `neg` and `zero` values (or a function returning
-	 * either a string or object)
+	 * Parameters:
+	 * string 		has "default positive format"
+	 * object			has `pos`(required, must contain %v), `neg`, `zero` properties
+	 * function		returns a string or object like above.
 	 *
-	 * Either string or format.pos must contain "%v" (value) to be valid
+	 * Returns:
+	 * object 		has `pos`(required, must contain %v), `neg`, `zero` properties.
+	 *
+	 	// Scenarios:
+		A: Valid String 	#=> convert string to a format object
+		B: Invalid String #=> use default and turn it to an object if it it's not already
+		C: Valid Object 	#=> do not touch the object at all.
+		D: Invalid Object #=> use default and turn it to an object if it's not already.
+		E: Function				#=> depends on what the function returns
+		F: Nothing				#=> use default and turn it to an object if it it's not already
 	 */
 	function checkCurrencyFormat(format) {
+		// Default value will be "%s%v" to start
 		var defaults = lib.settings.currency.format;
 
 		// Allow function as format parameter (should return string or object):
 		if ( typeof format === "function" ) format = format();
 
 		// Format can be a string, in which case `value` ("%v") must be present:
+		// 'chris'.match('c') => ['c']
+		// 'chris'.match('z') => null
 		if ( isString( format ) && format.match("%v") ) {
 
 			// Create and return positive, negative and zero formats:
 			return {
 				pos : format,
+				// '%s %v'
+				// '%s -- %v' ==> '%s - %v' ==> '%s - -%v' <- This is a unexpected behavior.
 				neg : format.replace("-", "").replace("%v", "-%v"),
 				zero : format
 			};
